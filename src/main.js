@@ -3,6 +3,8 @@ import 'izitoast/dist/css/iziToast.min.css';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
+const icon = 'path/to/icon.png';
+
 const formSearch = document.querySelector('.form');
 const imageList = document.querySelector('.gallery');
 const loader = document.querySelector('.loader');
@@ -19,12 +21,13 @@ function handleSearch(event) {
   const searchQuery = event.currentTarget.elements.input.value;
 
   imageList.innerHTML = '';
+  loader.classList.remove('is-hidden');
 
   if (!searchQuery.trim()) {
-    iziToast.show({
+    showNotification({
       title: '❕',
       theme: 'light',
-      message: `Please, fill in the search field`,
+      message: 'Please, fill in the search field',
       messageSize: '20px',
       messageColor: '#808080',
       backgroundColor: '#e7fc44',
@@ -34,16 +37,13 @@ function handleSearch(event) {
     return;
   }
 
-  loader.classList.remove('is-hidden');
-
   fetchImages(searchQuery)
     .then(data => {
       if (data.hits.length === 0) {
-        iziToast.show({
+        showNotification({
           iconUrl: icon,
           theme: 'dark',
-          message:
-            'Sorry, there are no images matching your search query. Please try again!',
+          message: 'Sorry, there are no images matching your search query. Please try again!',
           messageSize: '16px',
           messageColor: 'white',
           backgroundColor: '#EF4040',
@@ -68,7 +68,7 @@ function fetchImages(value) {
     q: value,
     image_type: 'photo',
     orientation: 'horizontal',
-    safesearch: 'true',
+    safesearch: true,
   });
 
   return fetch(`${BASE_URL}/?${searchParams}`).then(res => {
@@ -81,45 +81,30 @@ function fetchImages(value) {
 
 function createMarkup(arr) {
   return arr
-    .map(
-      ({
-        webformatURL,
-        largeImageURL,
-        tags,
-        likes,
-        views,
-        comments,
-        downloads,
-      }) =>
-        `<li class="gallery-item">
+    .map(({ webformatURL, largeImageURL, tags, likes, views, comments, downloads }) =>
+      `<li class="gallery-item">
         <a class="gallery-link" href="${largeImageURL}">
-           <img
-            class="gallery-image"
-            src="${webformatURL}"
-            alt="${tags}"
-          />
+           <img class="gallery-image" src="${webformatURL}" alt="${tags}" />
         </a>
         <div class="container-additional-info">
-        <div class="container-descr-inner"><p class="description">Likes</p><span class="description-value">${likes}</span></div>
-        
-        <div class="container-descr-inner"><p class="description">Views</p><span class="description-value">${views}</span></div>
-        
-
-        <div class="container-descr-inner"><p class="description">Comments</p><span class="description-value">${comments}</span></div>
-        
-
-        <div class="container-descr-inner"><p class="description">Downloads</p><span class="description-value">${downloads}</span></div>
-        
+          <div class="container-descr-inner"><p class="description">Likes</p><span class="description-value">${likes}</span></div>
+          <div class="container-descr-inner"><p class="description">Views</p><span class="description-value">${views}</span></div>
+          <div class="container-descr-inner"><p class="description">Comments</p><span class="description-value">${comments}</span></div>
+          <div class="container-descr-inner"><p class="description">Downloads</p><span class="description-value">${downloads}</span></div>
         </div>
       </li>`
     )
     .join('');
 }
 
+function showNotification(options) {
+  iziToast.show(options);
+}
+
 function handleError(err) {
   console.error(err);
   imageList.innerHTML = '';
-  iziToast.show({
+  showNotification({
     iconUrl: icon,
     theme: 'dark',
     message: 'Sorry, there is a problem with connection with the server.',
